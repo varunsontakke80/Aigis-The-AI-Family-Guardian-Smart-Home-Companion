@@ -1,167 +1,131 @@
-# ESP32-S3-BOX-3 LED Control Demo
+# Aigis - Smart Home Assistant
 
-A minimal ESP-IDF project for ESP32-S3-BOX-3 that demonstrates LED control via touchscreen and speech recognition.
+Aigis is a comprehensive Smart Home Assistant built on the **ESP32-S3-BOX-3**, designed to act as a central hub for controlling various smart nodes (Lights, Fans, Door Security, Health Monitoring, and Robot movement). It features a rich touch interface and offline speech recognition.
 
 ## Overview
 
-This project provides a simple interface to control a single LED (on/off, latching) using:
-- **Touchscreen**: Full-screen image button to toggle LED state
-- **Speech Recognition**: Voice commands "turn on light" and "turn off light"
-
-The LED state is persisted across reboots using NVS (Non-Volatile Storage).
+This project transforms the ESP32-S3-BOX-3 into an intelligent control center that communicates with other ESP32/ESP8266 nodes via **ESP-NOW**. It supports:
+- **Voice Control**: Offline command recognition for home automation.
+- **Security**: Integration with a Door Node (ESP32-CAM) for person detection and remote locking/unlocking.
+- **Health Monitoring**: Integration with a Health Node (Seeed Studio XIAO ESP32C3) for fall detection and vitals monitoring.
+- **Entertainment**: Interactive "Dance" and "Story" modes.
+- **Visual Feedback**: A responsive LVGL-based UI showing status, alerts, and animations.
 
 ## Hardware Requirements
 
+### Central Hub
 - **ESP32-S3-BOX-3** development board
-- **LED** connected to **GPIO40** (simple on/off, no PWM)
-- Built-in LCD touchscreen (320x240)
-- Built-in microphone array for speech recognition
+
+### Peripheral Nodes (Connected via ESP-NOW)
+1.  **Door Node**:
+    -   Hardware: **ESP32-CAM**
+    -   Function: Person detection (TinyML), Door Lock/Unlock control.
+2.  **Health Node**:
+    -   Hardware: **Seeed Studio XIAO ESP32C3** (or similar)
+    -   Function: Fall detection, Heart rate/SpO2 monitoring.
+3.  **Control Node**:
+    -   Hardware: **NodeMCU / ESP8266**
+    -   Function: Controls Lights, Fans, and Sockets.
+4.  **Robot Node**:
+    -   Function: Movement control (Walk forward, Stop).
 
 ## Features
 
-- ✅ **Boot Animation**: ESP logo animation on startup
-- ✅ **Touch Control**: Full-screen button with ON/OFF images (320x240)
-- ✅ **Speech Recognition**: English voice commands
-  - "turn on light" → LED ON
-  - "turn off light" → LED OFF
-- ✅ **SR Visual Feedback**: Listening screen with animation and text overlay
-- ✅ **Audio Feedback**: Tones for wake word, command recognition, and timeout
-- ✅ **State Persistence**: LED state saved to NVS and restored on boot
+-   ✅ **Offline Speech Recognition**: Supports natural language commands without internet.
+-   ✅ **Smart Home Control**:
+    -   Lights (On/Off)
+    -   Sockets (On/Off)
+    -   Fan Speed Control (Level 1, 2, 3, Off)
+-   ✅ **Security & Safety**:
+    -   **Door Lock/Unlock**: Voice commands to secure the entrance.
+    -   **Visitor Recognition**: Displays the name of the person detected at the door (received from Door Node).
+    -   **Fall Detection**: Immediate alert on the screen when a fall is detected by the Health Node.
+-   ✅ **Interactive Modes**:
+    -   **"Let's Dance"**: Plays music and shows a dancing animation.
+    -   **"Tell a Story"**: Plays an audio story with accompanying visuals.
+-   ✅ **ESP-NOW Communication**: Low-latency, peer-to-peer communication with all peripheral nodes.
 
 ## Project Structure
 
 ```
-factory_demo/
+Aigis_Project/
 ├── main/
 │   ├── app/
-│   │   ├── app_led.c/h          # Single LED GPIO control (GPIO40)
-│   │   ├── app_sr.c/h            # Speech recognition engine
-│   │   └── app_sr_handler.c/h    # SR command handler + audio feedback
+│   │   ├── app_sr.c/h            # Speech Recognition command definitions
+│   │   ├── app_espnow.c/h        # ESP-NOW comms with Door, Health, Control nodes
+│   │   ├── app_audio.c/h         # Audio playback (MP3/WAV)
+│   │   └── app_fall_monitor.c    # Logic for handling fall detection alerts
 │   ├── gui/
-│   │   ├── ui_boot_animate.c/h   # Boot animation
-│   │   ├── ui_sr.c/h             # SR listening screen overlay
-│   │   └── image/
-│   │       ├── switchOn.h        # ON state image (BMP converted)
-│   │       └── switchOff.h       # OFF state image (BMP converted)
-│   ├── light_ctrl.c/h            # LED control abstraction layer
-│   ├── light_state.c/h           # NVS state persistence
-│   ├── light_ui.c/h              # LVGL touchscreen UI
+│   │   ├── main_ui.c/h           # Main dashboard UI
+│   │   ├── door_ui.c/h           # Door security interface (Visitor display)
+│   │   ├── dance_ui.c/h          # Dance mode animation
+│   │   ├── story_ui.c/h          # Story mode interface
+│   │   └── fall_ui.c/h           # Fall detection alert screen
 │   └── main.c                    # Application entry point
-├── spiffs/                       # SPIFFS filesystem (audio files)
-│   └── echo_en_*.wav             # English audio feedback tones
+├── spiffs/                       # Filesystem for Audio Assets
+│   ├── mp3/                      # Story, Dance, and Door alert audio files
+│   └── echo_en_*.wav             # Voice command feedback tones
 └── CMakeLists.txt
 ```
 
-## Prerequisites
+## Voice Commands
 
-1. **ESP-IDF v5.5+** installed and configured
-   ```bash
-   . $HOME/esp/esp-idf/export.sh
-   ```
+Wake Word: **"Hi ESP"** (or configured wake word)
 
-2. **Python 3.12+** (required by ESP-IDF)
+### Home Automation
+| Command | Action |
+| :--- | :--- |
+| "Turn on light one" | Turns ON Learning Light |
+| "Turn off light one" | Turns OFF Learning Light |
+| "Turn on socket" | Turns ON Smart Socket |
+| "Turn off socket" | Turns OFF Smart Socket |
+| "Turn on fan at level one" | Sets Fan to Low Speed |
+| "Turn on fan at level two" | Sets Fan to Medium Speed |
+| "Turn on fan at level three" | Sets Fan to High Speed |
+| "Turn off fan" | Turns Fan OFF |
 
-## Build and Flash
+### Security & Health
+| Command | Action |
+| :--- | :--- |
+| "Lock the door" | Sends lock command to Door Node |
+| "Unlock the door" | Sends unlock command to Door Node |
+| "Check health" | Requests status from Health Node |
 
-1. **Navigate to project directory:**
-   ```bash
-   cd /Users/semiconmediapvtltd/Desktop/box3/factory_demo
-   ```
+### Entertainment & Robot
+| Command | Action |
+| :--- | :--- |
+| "Lets dance" | Starts music and dance animation on screen |
+| "Tell a story" | Plays a short story with visuals |
+| "Walk forward" | Commands Robot Node to move forward |
+| "Stop" | Commands Robot Node to stop |
 
-2. **Set up ESP-IDF environment:**
-   ```bash
-   . $HOME/esp/esp-idf/export.sh
-   ```
+## Setup & Configuration
 
-3. **Configure (optional):**
-   ```bash
-   idf.py menuconfig
-   ```
+1.  **Flash the Aigis Firmware**:
+    ```bash
+    idf.py set-target esp32s3
+    idf.py build
+    idf.py flash monitor
+    ```
 
-4. **Build:**
-   ```bash
-   idf.py build
-   ```
+2.  **Configure MAC Addresses**:
+    The ESP-NOW peers are defined in `main/app/app_espnow.c`. You must update the following arrays with the MAC addresses of your actual hardware nodes:
+    ```c
+    static uint8_t remote_mac_control[] = { ... }; // Your NodeMCU MAC
+    static const uint8_t remote_mac_health[] = { ... }; // Your Xiao C3 MAC
+    static const uint8_t remote_mac_door[] = { ... }; // Your ESP32-CAM MAC
+    ```
 
-5. **Flash and monitor:**
-   ```bash
-   idf.py flash monitor
-   ```
-
-   Or flash and monitor separately:
-   ```bash
-   idf.py flash
-   idf.py monitor
-   ```
-
-## Usage
-
-### Touch Control
-- Tap anywhere on the screen to toggle the LED state
-- The screen displays either the "ON" or "OFF" image based on current LED state
-
-### Voice Control
-1. Say the wake word (configured in ESP-SR)
-2. Wait for the listening animation
-3. Say one of the commands:
-   - **"turn on light"** → Turns LED ON
-   - **"turn off light"** → Turns LED OFF
-4. Audio feedback confirms command recognition
-
-### LED Connection
-Connect your LED to **GPIO40**:
-- **Anode** → GPIO40 (via current-limiting resistor, e.g., 220Ω)
-- **Cathode** → GND
-
-The LED is driven as a simple digital output (HIGH = ON, LOW = OFF).
-
-## Configuration
-
-### LED GPIO Pin
-To change the LED GPIO pin, edit `main/app/app_led.c`:
-```c
-#define SINGLE_LED_GPIO GPIO_NUM_40  // Change to your desired GPIO
-```
-
-### Speech Commands
-Speech commands are defined in `main/app/app_sr.c`:
-```c
-static const sr_cmd_t g_default_cmd_info[] = {
-    {SR_CMD_LIGHT_ON, SR_LANG_EN, 0, "turn on light", "TkN nN LiT", {NULL}},
-    {SR_CMD_LIGHT_OFF, SR_LANG_EN, 0, "turn off light", "TkN eF LiT", {NULL}},
-};
-```
-
-### Audio Feedback
-Audio feedback tones are stored in `spiffs/`:
-- `echo_en_wake.wav` - Wake word detected
-- `echo_en_ok.wav` - Command recognized
-- `echo_en_end.wav` - Timeout/end of listening
+3.  **Audio Files**:
+    Ensure the `spiffs` partition is populated with the required MP3/WAV files for audio feedback and entertainment modes.
 
 ## Troubleshooting
 
-### LED Always On/Off
-- Check GPIO40 connection and wiring
-- Verify LED polarity (common cathode)
-- Check if GPIO40 conflicts with other peripherals
-
-### Speech Recognition Not Working
-- Ensure microphone array is connected
-- Check audio codec initialization in logs
-- Verify SR model files are flashed correctly
-
-### White Screen After Boot
-- Check image conversion (BMP to RGB565)
-- Verify LVGL display initialization
-- Check display backlight settings
-
-### Audio Not Playing
-- Verify SPIFFS partition is mounted
-- Check audio files exist in `spiffs/`
-- Verify I2S codec initialization
+-   **ESP-NOW Failures**: Ensure all nodes are on the same WiFi channel (Default: Channel 11). Check `app_espnow.c` initialization.
+-   **Audio Issues**: Verify volume settings and `spiffs` partition mounting in `main.c`.
+-   **Touchscreen**: If UI is unresponsive, check `bsp_display_start_with_config` settings in `main.c`.
 
 ## License
 
 SPDX-License-Identifier: Unlicense OR CC0-1.0
-
-Copyright (c) 2015-2024 Espressif Systems (Shanghai) CO LTD
+Copyright (c) 2024 Espressif Systems (Shanghai) CO LTD
