@@ -16,13 +16,13 @@
 #define MAX_ADDR 0x57
 
 // --- WIFI & SMS CONFIGURATION ---
-const char* ssid = "vs24jio";           // Replace with your Wi-Fi Name
-const char* password = "8827772392";   // Replace with your Wi-Fi Password
+const char* ssid = "xxxxxx";           // Replace with your Wi-Fi Name
+const char* password = "xxxxxxx";   // Replace with your Wi-Fi Password
 
 // Circuit Digest API Details
-const char* apiKey = "cd_var_250126_entn_N";           // Replace with your API key
+const char* apiKey = "xxxxxx";           // Replace with your API key
 const char* templateID = "101";                // Using Template 101: "Your {#var#} is currently at {#var#}."
-const char* mobileNumber = "918982959820";     // Replace with recipient number (include Country Code!)
+const char* mobileNumber = "xxxxxxx";     // Replace with recipient number (include Country Code!)
 const char* var1 = "HEALTH BAND";              // Custom variable 1
 const char* var2 = "FALL DETECTED";            // Custom variable 2
 
