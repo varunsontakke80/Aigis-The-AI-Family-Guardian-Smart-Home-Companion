@@ -124,8 +124,3 @@ Wake Word: **"Hi ESP"** (or configured wake word)
 -   **ESP-NOW Failures**: Ensure all nodes are on the same WiFi channel (Default: Channel 11). Check `app_espnow.c` initialization.
 -   **Audio Issues**: Verify volume settings and `spiffs` partition mounting in `main.c`.
 -   **Touchscreen**: If UI is unresponsive, check `bsp_display_start_with_config` settings in `main.c`.
-
-## License
-
-SPDX-License-Identifier: Unlicense OR CC0-1.0
-Copyright (c) 2024 Espressif Systems (Shanghai) CO LTD
